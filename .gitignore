@@ -1,0 +1,6 @@
+node_modules
+.env
+.vercel
+old_indx.js
+temp.js
+misc
