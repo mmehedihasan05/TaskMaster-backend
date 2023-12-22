@@ -169,88 +169,14 @@ async function mainProcess() {
         // all blog Data Fetch
         // open api
         // sort and return
-        app.get("/allblogs", async (req, res) => {
-            // For testing purpose
-            console.log("All blogs requested");
+        app.get("/allTasks", async (req, res) => {
+            let allTasks = [];
+            let userEmail = req.query.email;
 
-            // Search Data Collecting
-            const searchTitle = req.query.searchTitle;
-            let searchCategories = req.query.categories;
-            let sort_Date = req.query.sort_Date || "descending";
+            let query = { userEmail: userEmail };
+            allTasks = await tasks.find(query).toArray();
 
-            const sortTimeOrder =
-                sort_Date === "descending" ? -1 : sort_Date === "ascending" ? 1 : -1;
-
-            let allBlogsList = [];
-            let searchedBlogs = true;
-
-            if (!searchTitle && !searchCategories) {
-                // Return all data.
-                const query = {};
-
-                const cursor = allBlogs.find(query);
-                cursor.sort({ creationTime: sortTimeOrder });
-                allBlogsList = await cursor.toArray();
-                searchedBlogs = false;
-            } else {
-                // return search data
-                let query = {};
-                const options = {
-                    sort: {
-                        creationTime: sortTimeOrder,
-                    },
-                };
-
-                if (searchTitle) {
-                    query.title = { $regex: searchTitle, $options: "i" };
-                }
-
-                if (searchCategories) {
-                    query.category = { $in: searchCategories.split(",") };
-                }
-
-                allBlogsList = await allBlogs.find(query, options).toArray();
-            }
-
-            // if user logged in there must be a token and it has been verified previously
-            // But if the user is not logged in, there will be no token and no data in req.user
-            // so the user id will be available in req.user and its simple to fetch wishlist data using that user id.
-            if (req.user) {
-                const userId = req.user.userId;
-                const wishlistQuery = { userId: userId };
-                const wishListData = await wishlist.findOne(wishlistQuery);
-
-                // No wishlist data available for that user, thats why its null
-                if (!wishListData) {
-                    // console.log("No wishlist data available");
-                    return res.send({ searchedBlogs, allBlogs: allBlogsList });
-                    // return res.send(allBlogsList);
-                } else {
-                    const wishLists = wishListData.wishLists;
-                    // console.log("wishLists", wishLists);
-
-                    // Now wishlists data will merge with the blogs data
-                    let updatedAllBlogsList = [];
-
-                    allBlogsList.forEach((blogData) => {
-                        wishLists.forEach((wishlistBlogId) => {
-                            if (blogData._id.equals(wishlistBlogId)) {
-                                blogData.wishlist = true;
-                            }
-                        });
-
-                        if (!blogData.wishlist) {
-                            blogData.wishlist = false;
-                        }
-
-                        updatedAllBlogsList.push(blogData);
-                    });
-
-                    return res.send({ searchedBlogs, allBlogs: updatedAllBlogsList });
-                }
-            } else {
-                return res.send({ searchedBlogs, allBlogs: allBlogsList });
-            }
+            return res.send(allTasks);
         });
 
         // Post blog to db
